@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+  <defs>
+    <linearGradient id="indigoGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#312E81" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D" />
+      <stop offset="100%" stop-color="#D4A017" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.12" />
+    </filter>
+  </defs>
+  <rect x="48" y="32" width="120" height="160" rx="24" fill="url(#indigoGrad)" filter="url(#shadow)" />
+  <rect x="76" y="72" width="64" height="8" rx="4" fill="#FFFFFF" opacity="0.6" />
+  <rect x="76" y="96" width="48" height="8" rx="4" fill="#FFFFFF" opacity="0.6" />
+  <circle cx="160" cy="160" r="56" fill="url(#goldGrad)" filter="url(#shadow)" />
+  <path d="M142 160 L154 172 L182 144" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
