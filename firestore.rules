@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function myEmployeeId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.employeeId;
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && getRole() == "admin";
+    }
+
+    match /employees/{employeeId} {
+      allow read: if request.auth != null && (
+        getRole() == "admin" || myEmployeeId() == employeeId
+      );
+      allow write: if request.auth != null && getRole() == "admin";
+      // Employees CANNOT write directly, even to their own doc — bank detail
+      // change requests go through a server action (see
+      // /api/employees/bank-change-request) that writes to
+      // bankAccountPending only, never directly to bankAccount.
+    }
+
+    match /taxSettings/{versionId} {
+      allow read: if request.auth != null && getRole() == "admin";
+      allow create: if request.auth != null && getRole() == "admin";
+      allow update, delete: if false; // versions are immutable once created
+    }
+
+    match /payrollRuns/{runId} {
+      allow read: if request.auth != null && getRole() == "admin";
+      allow write: if request.auth != null && getRole() == "admin";
+
+      match /payslips/{employeeId} {
+        allow read: if request.auth != null && (
+          getRole() == "admin" || myEmployeeId() == employeeId
+        );
+        allow write: if request.auth != null && getRole() == "admin";
+      }
+    }
+
+    match /notifications/{uid}/items/{notifId} {
+      allow read, update: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null;
+    }
+  }
+}

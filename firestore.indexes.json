@@ -1,0 +1,10 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "payslips",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [{ "fieldPath": "employeeId", "order": "ASCENDING" }]
+    }
+  ],
+  "fieldOverrides": []
+}
