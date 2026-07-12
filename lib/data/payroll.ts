@@ -68,3 +68,18 @@ export async function getMyPayslips(employeeId: string): Promise<Payslip[]> {
     return payslipFromDoc(d.id, runId, d.data());
   });
 }
+
+/**
+ * Admin-only: fetches every payslip across every run, for Reports
+ * aggregation (e.g. total tax remitted). Allowed by the payslips rule's
+ * `getRole() == "admin"` branch, which — unlike the employee-ownership
+ * branch — doesn't depend on resource.data, so it's trivially provable for
+ * a collectionGroup list query regardless of filters.
+ */
+export async function getAllPayslips(): Promise<Payslip[]> {
+  const snap = await getDocs(collectionGroup(db, "payslips"));
+  return snap.docs.map((d) => {
+    const runId = d.ref.parent.parent!.id;
+    return payslipFromDoc(d.id, runId, d.data());
+  });
+}
