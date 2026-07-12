@@ -107,11 +107,27 @@ function AdminHome() {
 
 function EmployeeHome({ employeeId }: { employeeId: string | null }) {
   const [payslips, setPayslips] = useState<Payslip[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!employeeId) return;
-    getMyPayslips(employeeId).then((p) => setPayslips(p.sort((a, b) => b.period.localeCompare(a.period))));
+    getMyPayslips(employeeId)
+      .then((p) => setPayslips(p.sort((a, b) => b.period.localeCompare(a.period))))
+      .catch((err) => {
+        console.error("Failed to load payslips:", err);
+        setError(err?.message ?? "Failed to load your payslips.");
+      });
   }, [employeeId]);
+
+  if (error) {
+    return (
+      <div className="max-w-2xl">
+        <p className="text-error text-sm bg-red-50 border border-red-200 rounded-lg p-4">
+          Couldn&apos;t load your payslips: {error}
+        </p>
+      </div>
+    );
+  }
 
   if (payslips === null) return <Spinner />;
 
