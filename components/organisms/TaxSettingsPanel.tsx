@@ -95,15 +95,18 @@ export default function TaxSettingsPanel({ current, history, adminUid }: Props) 
 
       <Card>
         <h2 className="font-bold text-lg text-text-primary mb-4">Version History</h2>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 md:gap-2">
           {[current, ...history].map((v) => (
-            <div key={v.id} className="flex justify-between items-center text-sm border-b border-border last:border-0 py-2">
-              <span className="font-mono text-xs text-text-secondary">{v.id}</span>
+            <div
+              key={v.id}
+              className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-3 text-sm border-b border-border last:border-0 py-2"
+            >
+              <span className="font-mono text-xs text-text-secondary truncate">{v.id}</span>
               <span className="text-text-primary">
                 Pension {(v.pensionRate * 100).toFixed(1)}% · NHF {(v.nhfRate * 100).toFixed(1)}% · Rent cap{" "}
                 {formatNaira(v.rentReliefCapAnnual)}
               </span>
-              <span className="text-text-secondary tabular-nums">
+              <span className="text-text-secondary tabular-nums text-xs md:text-sm">
                 {new Date(v.effectiveFrom).toLocaleDateString()}
               </span>
             </div>
