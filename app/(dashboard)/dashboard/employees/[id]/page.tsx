@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { authedFetch } from "@/lib/apiClient";
 import { subscribeToEmployee } from "@/lib/data/employees";
 import { Employee, SalaryStructure } from "@/types/employee";
 import { formatNaira } from "@/lib/tax-engine";
@@ -21,6 +22,7 @@ export default function EmployeeDetailPage() {
   const [salaryDraft, setSalaryDraft] = useState<SalaryStructure | null>(null);
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeToEmployee(id, (e) => {
@@ -71,6 +73,27 @@ export default function EmployeeDetailPage() {
     }
   }
 
+  async function handleSyncClaims() {
+    if (!employee) return;
+    setSyncing(true);
+    try {
+      const res = await authedFetch("/api/employees/sync-claims", {
+        method: "POST",
+        body: JSON.stringify({ employeeId: employee.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Failed to sync login permissions.");
+        return;
+      }
+      toast.success("Login permissions synced. Ask the employee to log out and back in.");
+    } catch {
+      toast.error("Network error syncing login permissions.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   if (employee === undefined) return <Spinner />;
   if (employee === null) {
     return (
@@ -96,6 +119,9 @@ export default function EmployeeDetailPage() {
           <StatusBadge status={employee.status} />
           <Button variant="secondary" onClick={handleToggleStatus}>
             {employee.status === "active" ? "Mark Inactive" : "Mark Active"}
+          </Button>
+          <Button variant="ghost" onClick={handleSyncClaims} loading={syncing}>
+            Sync Login Permissions
           </Button>
         </div>
       </div>

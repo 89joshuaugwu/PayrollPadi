@@ -45,6 +45,17 @@ export async function POST(req: NextRequest) {
       createdAt: Timestamp.now(),
     });
 
+    // 2b. Set custom claims so Firestore security rules can check
+    //     request.auth.token.employeeId directly (no get() lookup needed) —
+    //     this is what makes the collectionGroup "My Payslips" query provably
+    //     safe for Firestore's list-query rule validator. Requires the
+    //     employee's browser to get a fresh ID token (i.e. log out/in, or a
+    //     forced token refresh) before it takes effect client-side.
+    await adminAuth.setCustomUserClaims(userRecord.uid, {
+      role: "employee",
+      employeeId: employeeRef.id,
+    });
+
     // 3. Create the /users/{uid} doc with role: "employee", employeeId set
     await adminDb.collection("users").doc(userRecord.uid).set({
       email,
