@@ -113,6 +113,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <div className="hidden md:flex w-8 h-8 rounded-full bg-primary text-white items-center justify-center text-xs font-bold">
               {profile.displayName?.charAt(0).toUpperCase() ?? "U"}
             </div>
+            <button
+              onClick={handleLogout}
+              className="md:hidden p-2 rounded-full hover:bg-slate-100 text-text-secondary"
+              aria-label="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </header>
 
