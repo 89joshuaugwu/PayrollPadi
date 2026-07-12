@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Download } from "lucide-react";
 import { PayrollRun } from "@/types/payrollRun";
 import { Employee } from "@/types/employee";
+import { Payslip } from "@/types/payslip";
+import { getAllPayslips } from "@/lib/data/payroll";
 import { formatNaira } from "@/lib/tax-engine";
 import { formatPeriod } from "@/lib/utils";
 import Card from "@/components/ui/Card";
@@ -17,13 +19,38 @@ interface Props {
 
 export default function ReportsDashboard({ runs, employees }: Props) {
   const [exporting, setExporting] = useState(false);
+  const [payslips, setPayslips] = useState<Payslip[] | null>(null);
+
+  useEffect(() => {
+    getAllPayslips()
+      .then(setPayslips)
+      .catch((err) => {
+        console.error("Failed to load payslips for reports:", err);
+        setPayslips([]); // fall back to an empty set rather than blocking the whole Reports page
+      });
+  }, []);
 
   const lockedRuns = useMemo(() => runs.filter((r) => r.status === "locked").sort((a, b) => a.period.localeCompare(b.period)), [runs]);
+  const lockedRunIds = useMemo(() => new Set(lockedRuns.map((r) => r.id)), [lockedRuns]);
 
   const totalPayrollCost = lockedRuns.reduce((sum, r) => sum + r.totalCost, 0);
-  const totalTaxRemitted = 0; // requires per-payslip PAYE aggregation — see note below
-  const avgNetPay =
-    lockedRuns.length > 0 ? lockedRuns.reduce((sum, r) => sum + r.totalCost, 0) / lockedRuns.reduce((s, r) => s + r.employeeCount, 0) : 0;
+
+  // Total tax remitted: sum of PAYE actually withheld across every payslip
+  // belonging to a LOCKED run only (draft runs haven't been finalized, so
+  // their tax figures shouldn't count as "remitted" yet).
+  const totalTaxRemitted = useMemo(() => {
+    if (!payslips) return null;
+    return payslips
+      .filter((p) => lockedRunIds.has(p.runId))
+      .reduce((sum, p) => sum + p.deductions.payeTax, 0);
+  }, [payslips, lockedRunIds]);
+
+  const avgNetPay = useMemo(() => {
+    if (!payslips) return null;
+    const lockedPayslips = payslips.filter((p) => lockedRunIds.has(p.runId));
+    if (lockedPayslips.length === 0) return 0;
+    return lockedPayslips.reduce((sum, p) => sum + p.netPay, 0) / lockedPayslips.length;
+  }, [payslips, lockedRunIds]);
 
   const trendData = lockedRuns.map((r) => ({ period: formatPeriod(r.period), cost: r.totalCost }));
 
@@ -62,15 +89,15 @@ export default function ReportsDashboard({ runs, employees }: Props) {
         </Card>
         <Card>
           <p className="text-sm text-text-secondary">Total Tax Remitted</p>
-          <p className="text-2xl font-bold tabular-nums text-text-primary mt-1">{formatNaira(totalTaxRemitted)}</p>
-          <p className="text-xs text-text-secondary mt-1">
-            Aggregate PAYE per payslip — wire up a collectionGroup query over payslips for a precise figure.
+          <p className="text-2xl font-bold tabular-nums text-text-primary mt-1">
+            {totalTaxRemitted === null ? "…" : formatNaira(totalTaxRemitted)}
           </p>
+          <p className="text-xs text-text-secondary mt-1">Sum of PAYE across every payslip in locked runs.</p>
         </Card>
         <Card>
           <p className="text-sm text-text-secondary">Average Net Pay</p>
           <p className="text-2xl font-bold tabular-nums text-text-primary mt-1">
-            {Number.isFinite(avgNetPay) ? formatNaira(avgNetPay) : "—"}
+            {avgNetPay === null ? "…" : formatNaira(avgNetPay)}
           </p>
         </Card>
       </div>
