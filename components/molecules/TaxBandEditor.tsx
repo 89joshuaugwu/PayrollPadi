@@ -33,39 +33,81 @@ export default function TaxBandEditor({ bands, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="hidden md:grid grid-cols-[1fr_1fr_1fr_auto] gap-3 text-xs font-semibold text-text-secondary px-1">
-        <span>Min (₦, annual)</span>
-        <span>Max (₦, annual — blank = no limit)</span>
-        <span>Rate (%)</span>
-        <span></span>
-      </div>
-      {bands.map((band, i) => (
-        <div key={i} className="grid grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
-          <Input
-            type="number"
-            value={band.min}
-            onChange={(e) => updateBand(i, { min: Number(e.target.value) })}
-            aria-label={`Band ${i + 1} minimum`}
-          />
-          <Input
-            type="number"
-            value={band.max ?? ""}
-            placeholder="No limit"
-            onChange={(e) => updateBand(i, { max: e.target.value === "" ? null : Number(e.target.value) })}
-            aria-label={`Band ${i + 1} maximum`}
-          />
-          <Input
-            type="number"
-            step="0.01"
-            value={band.rate * 100}
-            onChange={(e) => updateBand(i, { rate: Number(e.target.value) / 100 })}
-            aria-label={`Band ${i + 1} rate`}
-          />
-          <Button variant="ghost" onClick={() => removeBand(i)} aria-label="Remove band">
-            <Trash2 className="w-4 h-4 text-error" />
-          </Button>
+      {/* Desktop: compact grid-table layout */}
+      <div className="hidden md:flex md:flex-col gap-3">
+        <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 text-xs font-semibold text-text-secondary px-1">
+          <span>Min (₦, annual)</span>
+          <span>Max (₦, annual — blank = no limit)</span>
+          <span>Rate (%)</span>
+          <span></span>
         </div>
-      ))}
+        {bands.map((band, i) => (
+          <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
+            <Input
+              type="number"
+              value={band.min}
+              onChange={(e) => updateBand(i, { min: Number(e.target.value) })}
+              aria-label={`Band ${i + 1} minimum`}
+            />
+            <Input
+              type="number"
+              value={band.max ?? ""}
+              placeholder="No limit"
+              onChange={(e) => updateBand(i, { max: e.target.value === "" ? null : Number(e.target.value) })}
+              aria-label={`Band ${i + 1} maximum`}
+            />
+            <Input
+              type="number"
+              step="0.01"
+              value={band.rate * 100}
+              onChange={(e) => updateBand(i, { rate: Number(e.target.value) / 100 })}
+              aria-label={`Band ${i + 1} rate`}
+            />
+            <Button variant="ghost" onClick={() => removeBand(i)} aria-label="Remove band">
+              <Trash2 className="w-4 h-4 text-error" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile: labeled card per band, no cramped columns */}
+      <div className="md:hidden flex flex-col gap-4">
+        {bands.map((band, i) => (
+          <div key={i} className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-white">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-text-primary">Band {i + 1}</span>
+              <button
+                onClick={() => removeBand(i)}
+                aria-label="Remove band"
+                className="p-1.5 rounded-md hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 text-error" />
+              </button>
+            </div>
+            <Input
+              label="Min (₦, annual)"
+              type="number"
+              value={band.min}
+              onChange={(e) => updateBand(i, { min: Number(e.target.value) })}
+            />
+            <Input
+              label="Max (₦, annual — blank = no limit)"
+              type="number"
+              value={band.max ?? ""}
+              placeholder="No limit"
+              onChange={(e) => updateBand(i, { max: e.target.value === "" ? null : Number(e.target.value) })}
+            />
+            <Input
+              label="Rate (%)"
+              type="number"
+              step="0.01"
+              value={band.rate * 100}
+              onChange={(e) => updateBand(i, { rate: Number(e.target.value) / 100 })}
+            />
+          </div>
+        ))}
+      </div>
+
       <Button variant="secondary" onClick={addBand} className="self-start">
         <Plus className="w-4 h-4" /> Add Band
       </Button>
