@@ -15,6 +15,7 @@ import Button from "@/components/ui/Button";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Spinner from "@/components/ui/Spinner";
 import DataTable, { Column } from "@/components/ui/DataTable";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function PayrollRunDetailPage() {
   const { runId } = useParams<{ runId: string }>();
@@ -22,6 +23,7 @@ export default function PayrollRunDetailPage() {
   const [run, setRun] = useState<PayrollRun | null | undefined>(undefined);
   const [payslips, setPayslips] = useState<Payslip[]>([]);
   const [locking, setLocking] = useState(false);
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
 
   useEffect(() => {
     const unsub1 = subscribeToPayrollRun(runId, setRun);
@@ -33,7 +35,6 @@ export default function PayrollRunDetailPage() {
   }, [runId]);
 
   async function handleLock() {
-    if (!confirm("Lock this payroll run? This will generate PDFs and email every employee — this cannot be undone.")) return;
     setLocking(true);
     try {
       const res = await authedFetch("/api/payroll/lock", {
@@ -46,6 +47,7 @@ export default function PayrollRunDetailPage() {
         return;
       }
       toast.success("Payroll run locked and payslips sent.");
+      setShowLockConfirm(false);
     } catch {
       toast.error("Network error locking payroll run.");
     } finally {
@@ -82,11 +84,22 @@ export default function PayrollRunDetailPage() {
           </div>
         </div>
         {run.status === "draft" && (
-          <Button onClick={handleLock} loading={locking}>
+          <Button onClick={() => setShowLockConfirm(true)} loading={locking}>
             <Lock className="w-4 h-4" /> Lock Payroll Run
           </Button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showLockConfirm}
+        title="Lock Payroll Run"
+        message="This will generate PDFs and email every employee — this cannot be undone."
+        confirmLabel="Lock Payroll Run"
+        variant="danger"
+        loading={locking}
+        onConfirm={handleLock}
+        onCancel={() => setShowLockConfirm(false)}
+      />
 
       <Card>
         <DataTable
