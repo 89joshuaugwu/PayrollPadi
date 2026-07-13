@@ -36,13 +36,5 @@
     "eslint": "^9.16.0",
     "eslint-config-next": "16.2.0",
     "@eslint/eslintrc": "^3.2.0"
-  },
-  "allowScripts": {
-    "@firebase/util@1.12.1": true,
-    "@firebase/util@1.10.0": true,
-    "core-js@3.49.0": true,
-    "protobufjs@7.6.5": true,
-    "sharp@0.34.5": true,
-    "unrs-resolver@1.12.2": true
   }
 }

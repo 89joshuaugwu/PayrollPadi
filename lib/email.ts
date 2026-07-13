@@ -1,6 +1,11 @@
 import nodemailer from "nodemailer";
-import { PayslipResult } from "@/types/payslip";
-import { formatNaira } from "@/lib/tax-engine";
+import {
+  buildPayslipEmailHtml,
+  buildPayslipEmailText,
+  buildTempPasswordEmailHtml,
+  buildTempPasswordEmailText,
+  PayslipEmailData,
+} from "@/lib/email-templates";
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -19,22 +24,25 @@ function getTransporter(): nodemailer.Transporter {
 export async function sendPayslipEmail(
   toEmail: string,
   pdfBuffer: Buffer,
-  payslip: PayslipResult
+  data: PayslipEmailData
 ): Promise<void> {
   await getTransporter().sendMail({
     from: `"PayrollPadi" <${process.env.GMAIL_SMTP_USER}>`,
     to: toEmail,
     subject: "Your Payslip is Ready",
-    text: `Hi, your payslip for this period is attached. Net pay: ${formatNaira(payslip.netPay)}`,
+    text: buildPayslipEmailText(data),
+    html: buildPayslipEmailHtml(data),
     attachments: [{ filename: "payslip.pdf", content: pdfBuffer }],
   });
 }
 
 export async function sendTempPasswordEmail(toEmail: string, name: string, tempPassword: string): Promise<void> {
+  const data = { name, email: toEmail, tempPassword };
   await getTransporter().sendMail({
     from: `"PayrollPadi" <${process.env.GMAIL_SMTP_USER}>`,
     to: toEmail,
     subject: "Your PayrollPadi Account",
-    text: `Hi ${name}, an account has been created for you on PayrollPadi.\n\nEmail: ${toEmail}\nTemporary password: ${tempPassword}\n\nLog in at ${process.env.NEXT_PUBLIC_APP_URL}/auth/login and change your password from Settings.`,
+    text: buildTempPasswordEmailText(data),
+    html: buildTempPasswordEmailHtml(data),
   });
 }

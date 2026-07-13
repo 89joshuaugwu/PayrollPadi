@@ -34,11 +34,9 @@ export async function POST(req: NextRequest) {
     });
 
     await sendPayslipEmail(employeeEmail, pdfBuffer, {
-      grossPay: payslip.grossPay,
-      earnings: payslip.earnings,
-      deductions: payslip.deductions,
+      employeeName: payslip.employeeName,
+      period: payslip.period,
       netPay: payslip.netPay,
-      payeBreakdown: payslip.payeBreakdown,
     });
 
     await payslipSnap.ref.update({ emailSentAt: Timestamp.now() });
