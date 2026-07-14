@@ -25,6 +25,7 @@ Firestore is a **NoSQL document database**. There are no tables, no rows, no SQL
     /payslips/{employeeId}        ← subcollection
 /notifications/{uid}
     /items/{notifId}              ← subcollection
+/settings/company
 ```
 
 ---
@@ -155,7 +156,19 @@ The document ID (`{uid}`) is the Firebase Authentication user ID — the same ID
 
 ---
 
-## 7. Indexes
+## 7. `/settings/company`
+
+**Purpose:** a single document holding the company name shown in the payslip PDF header. Document ID is always the literal string `"company"` — there's only ever one of these.
+
+| Field | Type | Notes |
+|---|---|---|
+| `companyName` | string | Falls back to `"PayrollPadi"` if this document doesn't exist yet — nothing breaks before an admin first sets it. |
+| `updatedAt` | timestamp | |
+| `updatedBy` | string | Admin UID who last saved it. |
+
+**Who can read/write it:** admins only. Every payslip PDF generation (lock, resend, on-demand download) reads this fresh via the Admin SDK, so changing it here affects every *new* PDF from that point forward — but, consistent with the rest of the system, a payslip already locked and emailed keeps whatever name was in effect when it was generated, since the PDF itself was already created and sent.
+
+## 8. Indexes
 
 Firestore automatically indexes every field for simple reads **within a single collection**. It does **not** automatically index fields for `collectionGroup` queries (searching across every instance of a same-named subcollection, like `payslips`) — that has to be explicitly enabled.
 
@@ -163,7 +176,7 @@ This project needs exactly one such index, configured as a **single-field exempt
 
 ---
 
-## 8. Quick Reference — Who Can Read/Write What
+## 9. Quick Reference — Who Can Read/Write What
 
 | Collection | Admin read | Admin write | Employee read | Employee write |
 |---|---|---|---|---|
@@ -172,6 +185,7 @@ This project needs exactly one such index, configured as a **single-field exempt
 | `/taxSettings/{id}` | ✅ any | ✅ create only, never edit/delete | ❌ never | ❌ never |
 | `/payrollRuns/{id}` | ✅ any | ✅ any | ❌ never (accessed only via the `payslips` subcollection) | ❌ never |
 | `.../payslips/{id}` | ✅ any | ✅ any | own payslip only | ❌ never |
+| `/settings/company` | ✅ any | ✅ any | ❌ never | ❌ never |
 | `/notifications/{uid}/items` | own doc only¹ | ✅ any (as creator) | own items only | can create (for others), can only read/update own |
 
 ¹ Admins don't get special blanket access to *other* users' `/users` docs — this is intentional; admin privilege for employee data flows through `/employees`, not through reading other people's login-identity records.

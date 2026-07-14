@@ -3,6 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { adminDb, requireAdmin } from "@/lib/firebase-admin";
 import { generatePayslipPDF } from "@/lib/pdf";
 import { sendPayslipEmail } from "@/lib/email";
+import { getCompanyName } from "@/lib/settings";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
     const employeeEmail: string | undefined = employeeSnap.data()?.email;
     if (!employeeEmail) return NextResponse.json({ error: "Employee email not found." }, { status: 404 });
 
+    const companyName = await getCompanyName();
     const pdfBuffer = generatePayslipPDF({
       employeeName: payslip.employeeName,
       employeeIdNumber: payslip.employeeIdNumber,
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
       netPay: payslip.netPay,
       payeBreakdown: payslip.payeBreakdown,
       taxSettingsVersionUsed: payslip.taxSettingsVersionUsed,
+      companyName,
     });
 
     await sendPayslipEmail(employeeEmail, pdfBuffer, {

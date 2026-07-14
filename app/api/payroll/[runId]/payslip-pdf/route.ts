@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, verifyRequestAuth, getCallerProfile } from "@/lib/firebase-admin";
 import { generatePayslipPDF } from "@/lib/pdf";
+import { getCompanyName } from "@/lib/settings";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
   try {
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ runI
     if (!payslipSnap.exists) return NextResponse.json({ error: "Payslip not found." }, { status: 404 });
     const payslip = payslipSnap.data()!;
 
+    const companyName = await getCompanyName();
     const pdfBuffer = generatePayslipPDF({
       employeeName: payslip.employeeName,
       employeeIdNumber: payslip.employeeIdNumber,
@@ -34,6 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ runI
       netPay: payslip.netPay,
       payeBreakdown: payslip.payeBreakdown,
       taxSettingsVersionUsed: payslip.taxSettingsVersionUsed,
+      companyName,
     });
 
     return new NextResponse(new Uint8Array(pdfBuffer), {

@@ -4,6 +4,7 @@ import { computePayslip } from "@/lib/tax-engine";
 import { generatePayslipPDF } from "@/lib/pdf";
 import { sendPayslipEmail } from "@/lib/email";
 import { uploadPayslipPdf } from "@/lib/cloudinary";
+import { getCompanyName } from "@/lib/settings";
 import { Employee, isSalaryStructureComplete } from "@/types/employee";
 import { TaxSettingsVersion } from "@/types/taxSettings";
 import { PayslipResult } from "@/types/payslip";
@@ -105,6 +106,7 @@ export async function lockPayrollRun(runId: string): Promise<void> {
   if (run.status === "locked") throw new Error("Payroll run is already locked.");
 
   const payslipsSnap = await runRef.collection("payslips").get();
+  const companyName = await getCompanyName();
 
   for (const payslipDoc of payslipsSnap.docs) {
     const payslip = payslipDoc.data();
@@ -123,6 +125,7 @@ export async function lockPayrollRun(runId: string): Promise<void> {
       netPay: payslip.netPay,
       payeBreakdown: payslip.payeBreakdown,
       taxSettingsVersionUsed: payslip.taxSettingsVersionUsed,
+      companyName,
     });
 
     // Cloudinary upload is optional/best-effort — never blocks the lock

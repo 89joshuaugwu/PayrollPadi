@@ -83,7 +83,7 @@ Three summary metric cards (Total Payroll Cost, Total Tax Remitted, Average Net 
 ### `/dashboard/settings` — Admin Settings 👔
 **File:** `app/(dashboard)/dashboard/settings/page.tsx`
 
-Admin's own profile display, a company-name field (intended to feed the payslip PDF header — currently a local input, not yet persisted to Firestore, see the note in that file if wiring it up fully), and a change-password form.
+Admin's own profile display, a company-name field that persists to `/settings/company` and feeds the payslip PDF header on every subsequently generated PDF (locked runs already emailed keep whatever name was in effect at the time — same immutability principle as everything else on a locked payslip), and a change-password form.
 
 ---
 

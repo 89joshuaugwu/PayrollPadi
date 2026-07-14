@@ -140,6 +140,7 @@ The original phase-by-phase build (`PayrollPadi_PROMPT.md`) got the system fully
 - **Native browser `confirm()` replaced** with a branded confirmation dialog (`components/ui/ConfirmDialog.tsx`) for the "Lock Payroll Run" action — matches the design system instead of an ugly native browser popup.
 - **Landing page redesigned** — animated hero, a live-looking sample payslip preview, a features grid, and a "how it works" section, replacing an earlier bare-bones version.
 - **Reports → Total Tax Remitted wired up for real** — previously a placeholder `₦0`, now a genuine sum of PAYE across every payslip in every locked run (`lib/data/payroll.ts`'s `getAllPayslips()`).
+- **Company name fully wired into payslip PDFs** — previously a local-only input on the Settings page that didn't persist anywhere. Now saved to `/settings/company` and read fresh by every PDF-generating route (`lib/settings.ts`'s `getCompanyName()`), with the same "already-locked payslips don't retroactively change" principle as everything else in the system.
 
 ## 8. Known Scope Decisions (Not Bugs)
 

@@ -1,20 +1,56 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import toast from "react-hot-toast";
 import { updatePassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/AuthContext";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 
+const DEFAULT_COMPANY_NAME = "PayrollPadi";
+
 export default function SettingsPage() {
-  const { profile } = useAuth();
-  const [companyName, setCompanyName] = useState("PayrollPadi");
+  const { profile, firebaseUser } = useAuth();
+  const [companyName, setCompanyName] = useState(DEFAULT_COMPANY_NAME);
+  const [companyNameLoaded, setCompanyNameLoaded] = useState(false);
+  const [savingCompanyName, setSavingCompanyName] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [changing, setChanging] = useState(false);
+
+  useEffect(() => {
+    getDoc(doc(db, "settings", "company"))
+      .then((snap) => {
+        const name = snap.exists() ? (snap.data().companyName as string | undefined) : undefined;
+        if (name) setCompanyName(name);
+      })
+      .catch((err) => console.error("Failed to load company name:", err))
+      .finally(() => setCompanyNameLoaded(true));
+  }, []);
+
+  async function handleSaveCompanyName() {
+    if (!firebaseUser) return;
+    if (!companyName.trim()) {
+      toast.error("Company name can't be empty.");
+      return;
+    }
+    setSavingCompanyName(true);
+    try {
+      await setDoc(doc(db, "settings", "company"), {
+        companyName: companyName.trim(),
+        updatedAt: Timestamp.now(),
+        updatedBy: firebaseUser.uid,
+      });
+      toast.success("Company name saved — new payslip PDFs will use it.");
+    } catch {
+      toast.error("Failed to save company name.");
+    } finally {
+      setSavingCompanyName(false);
+    }
+  }
 
   async function handlePasswordChange(e: FormEvent) {
     e.preventDefault();
@@ -61,11 +97,17 @@ export default function SettingsPage() {
           label="Company Name (used in payslip PDF header)"
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
+          disabled={!companyNameLoaded}
         />
         <p className="text-xs text-text-secondary mt-2">
-          Wired into the payslip PDF header — update <code>lib/pdf.ts</code>&apos;s <code>companyName</code> default
-          or persist this to a <code>/settings/company</code> doc for a fully dynamic header.
+          Applies to every payslip PDF generated after saving — locked runs already emailed keep whatever name was
+          in effect when they were sent, same immutability principle as everything else on a locked payslip.
         </p>
+        <div className="flex justify-end mt-3">
+          <Button onClick={handleSaveCompanyName} loading={savingCompanyName} disabled={!companyNameLoaded}>
+            Save Company Name
+          </Button>
+        </div>
       </Card>
 
       <Card>
